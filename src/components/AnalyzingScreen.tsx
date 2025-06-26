@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Newspaper, Code, TrendingUp, Brain, CheckCircle, Zap } from 'lucide-react'
+import { Search, Newspaper, Code, TrendingUp, Brain, CheckCircle, Zap, Briefcase, Globe } from 'lucide-react'
 import { LoadingStepIndicator } from './LoadingStepIndicator'
 
 interface AnalyzingScreenProps {
@@ -12,31 +12,31 @@ const analysisSteps = [
   {
     id: 'scanning',
     icon: Search,
-    message: 'Scanning company profile and website...',
-    duration: 2000
+    message: '🔍 Scanning company profile and extracting domain...',
+    duration: 1500
   },
   {
     id: 'news',
     icon: Newspaper,
-    message: 'Fetching latest headlines from NewsData...',
+    message: '📡 Fetching real-time headlines from NewsData API...',
     duration: 3000
+  },
+  {
+    id: 'jobs',
+    icon: Briefcase,
+    message: '💼 Searching for hiring signals via JSearch API...',
+    duration: 2500
   },
   {
     id: 'tech',
     icon: Code,
-    message: 'Analyzing tech stack and infrastructure...',
-    duration: 2500
-  },
-  {
-    id: 'jobs',
-    icon: TrendingUp,
-    message: 'Checking hiring signals from JSearch...',
+    message: '🛠 Parsing tech signals from job postings and metadata...',
     duration: 2000
   },
   {
     id: 'ai',
     icon: Brain,
-    message: 'Groq AI generating strategic insights...',
+    message: '🤖 Asking Groq AI to generate personalized strategy...',
     duration: 4000
   }
 ]
@@ -105,7 +105,12 @@ export function AnalyzingScreen({ companyName, website }: AnalyzingScreenProps) 
             </motion.h3>
             
             <p className="text-gray-400">
-              {website ? `Investigating ${website}` : 'Gathering intelligence from multiple sources'}
+              {website ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  Investigating {new URL(website.startsWith('http') ? website : `https://${website}`).hostname}
+                </span>
+              ) : 'Gathering intelligence from multiple real-time sources'}
             </p>
             
             <motion.div
@@ -114,7 +119,7 @@ export function AnalyzingScreen({ companyName, website }: AnalyzingScreenProps) 
               transition={{ duration: 1.5, repeat: Infinity }}
             >
               <Brain className="w-4 h-4" />
-              <span>Powered by Groq AI</span>
+              <span>Powered by Real APIs + Groq AI</span>
             </motion.div>
           </div>
 
@@ -124,8 +129,22 @@ export function AnalyzingScreen({ companyName, website }: AnalyzingScreenProps) 
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-gray-500 text-sm">
-              This may take a few moments while we gather real-time data
+              Fetching live data from NewsData, JSearch, and Clearbit APIs
             </p>
+            <div className="flex items-center justify-center gap-4 mt-3 text-xs text-gray-600">
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                Real-time data
+              </span>
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                AI analysis
+              </span>
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></div>
+                Strategic insights
+              </span>
+            </div>
           </div>
         </motion.div>
       </div>

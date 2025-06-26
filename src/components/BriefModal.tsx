@@ -12,7 +12,12 @@ import {
   AlertTriangle,
   CheckCircle,
   Mail,
-  Globe
+  Globe,
+  Shield,
+  Users,
+  Briefcase,
+  TrendingUp,
+  Clock
 } from 'lucide-react'
 import { Brief } from '../lib/supabase'
 
@@ -45,7 +50,18 @@ export function BriefModal({ brief, isOpen, onClose }: BriefModalProps) {
     })
   }
 
+  const getConfidenceBadgeColor = (confidence: string) => {
+    switch (confidence) {
+      case 'detected': return 'bg-green-500/20 text-green-300 border-green-500/30'
+      case 'likely': return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+      case 'inferred': return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+      default: return 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+    }
+  }
+
   if (!brief) return null
+
+  const logoUrl = brief.companyLogo || (brief.companyDomain ? `https://logo.clearbit.com/${brief.companyDomain}` : null)
 
   return (
     <AnimatePresence>
@@ -61,26 +77,40 @@ export function BriefModal({ brief, isOpen, onClose }: BriefModalProps) {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-gray-900 border border-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-gray-900 border border-gray-800 rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="p-6 border-b border-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-violet-500 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-white" />
+                <div className="relative">
+                  {logoUrl ? (
+                    <img 
+                      src={logoUrl} 
+                      alt={`${brief.companyName} logo`}
+                      className="w-12 h-12 rounded-lg object-cover bg-gray-800"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        target.nextElementSibling?.classList.remove('hidden')
+                      }}
+                    />
+                  ) : null}
+                  <div className={`w-12 h-12 bg-gradient-to-r from-primary-500 to-violet-500 rounded-lg flex items-center justify-center ${logoUrl ? 'hidden' : ''}`}>
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-white">{brief.companyName}</h2>
                   {brief.website && (
                     <a 
-                      href={brief.website} 
+                      href={brief.website.startsWith('http') ? brief.website : `https://${brief.website}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-primary-400 hover:text-primary-300 text-sm flex items-center gap-1 mt-1"
                     >
                       <Globe className="w-3 h-3" />
-                      Visit website <ExternalLink className="w-3 h-3" />
+                      {brief.companyDomain || 'Visit website'} <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
                 </div>
@@ -109,16 +139,49 @@ export function BriefModal({ brief, isOpen, onClose }: BriefModalProps) {
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               <div className="space-y-8">
+                {/* Data Confidence Banner */}
+                {brief.confidenceNotes && (
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-5 h-5 text-blue-400" />
+                      <div>
+                        <h4 className="text-blue-300 font-medium">Data Sources & Confidence</h4>
+                        <p className="text-blue-200 text-sm mt-1">{brief.confidenceNotes}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Executive Summary */}
                 <div>
                   <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                    <Target className="w-5 h-5 text-primary-400" />
-                    Executive Summary
+                    <TrendingUp className="w-5 h-5 text-primary-400" />
+                    Strategic Summary
                   </h3>
                   <div className="bg-gray-800/50 rounded-xl p-6">
                     <p className="text-gray-300 leading-relaxed text-lg">{brief.summary}</p>
                   </div>
                 </div>
+
+                {/* Key Insights */}
+                {brief.keyInsights && brief.keyInsights.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-accent-400" />
+                      Key Intelligence
+                    </h3>
+                    <div className="bg-accent-500/10 border border-accent-500/20 rounded-xl p-6">
+                      <div className="space-y-3">
+                        {brief.keyInsights.map((insight, index) => (
+                          <div key={index} className="flex items-start gap-3">
+                            <div className="w-2 h-2 bg-accent-400 rounded-full mt-2 flex-shrink-0"></div>
+                            <p className="text-gray-300 leading-relaxed">{insight}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Strategic Pitch Angle */}
                 <div>
@@ -166,30 +229,45 @@ export function BriefModal({ brief, isOpen, onClose }: BriefModalProps) {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8">
-                  {/* News Headlines */}
+                <div className="grid lg:grid-cols-2 gap-8">
+                  {/* Recent News */}
                   {brief.news && brief.news.length > 0 && (
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                         <Newspaper className="w-5 h-5 text-green-400" />
-                        Recent News
+                        Recent News ({brief.news.length} articles)
                       </h3>
                       <div className="space-y-4">
-                        {brief.news.slice(0, 3).map((item, index) => (
+                        {brief.news.map((item, index) => (
                           <div key={index} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                            <h4 className="font-medium text-white mb-2 line-clamp-2">{item.title}</h4>
-                            <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
+                            <div className="flex items-start gap-3 mb-3">
+                              {item.favicon && (
+                                <img 
+                                  src={item.favicon} 
+                                  alt={item.source} 
+                                  className="w-5 h-5 mt-0.5 flex-shrink-0"
+                                  onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-white mb-2 line-clamp-2">{item.title}</h4>
+                                <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
+                              </div>
+                            </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">
-                                {new Date(item.publishedAt).toLocaleDateString()}
-                              </span>
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <Clock className="w-3 h-3" />
+                                <span>{item.source || 'News Source'}</span>
+                                <span>•</span>
+                                <span>{new Date(item.publishedAt).toLocaleDateString()}</span>
+                              </div>
                               <a 
                                 href={item.url} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-green-400 hover:text-green-300 text-xs flex items-center gap-1 font-medium"
                               >
-                                Read more <ExternalLink className="w-3 h-3" />
+                                See Source <ExternalLink className="w-3 h-3" />
                               </a>
                             </div>
                           </div>
@@ -198,26 +276,74 @@ export function BriefModal({ brief, isOpen, onClose }: BriefModalProps) {
                     </div>
                   )}
 
-                  {/* Tech Stack */}
-                  {brief.techStack && brief.techStack.length > 0 && (
+                  {/* Job Signals */}
+                  {brief.jobSignals && brief.jobSignals.length > 0 && (
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <Code className="w-5 h-5 text-blue-400" />
-                        Tech Stack
+                        <Users className="w-5 h-5 text-purple-400" />
+                        Hiring Signals ({brief.jobSignals.length} active)
                       </h3>
-                      <div className="flex flex-wrap gap-3">
-                        {brief.techStack.map((tech, index) => (
-                          <span 
-                            key={index}
-                            className="px-4 py-2 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-lg text-sm font-medium"
-                          >
-                            {tech}
-                          </span>
+                      <div className="space-y-3">
+                        {brief.jobSignals.map((job, index) => (
+                          <div key={index} className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h4 className="font-medium text-white mb-1">{job.title}</h4>
+                                <div className="flex items-center gap-2 text-sm text-gray-400">
+                                  <Briefcase className="w-3 h-3" />
+                                  <span>{job.location}</span>
+                                  <span>•</span>
+                                  <span>{job.type}</span>
+                                </div>
+                              </div>
+                              <span className="text-xs text-purple-300 bg-purple-500/20 px-2 py-1 rounded">
+                                {new Date(job.posted).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
+
+                {/* Tech Stack */}
+                {brief.techStackDetail && brief.techStackDetail.length > 0 ? (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                      <Code className="w-5 h-5 text-blue-400" />
+                      Tech Stack Analysis
+                    </h3>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {brief.techStackDetail.map((tech, index) => (
+                        <div 
+                          key={index}
+                          className={`p-4 rounded-lg border ${getConfidenceBadgeColor(tech.confidence)}`}
+                        >
+                          <div className="font-medium text-sm mb-1">{tech.name}</div>
+                          <div className="text-xs opacity-75 capitalize">{tech.confidence} from {tech.source}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : brief.techStack && brief.techStack.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                      <Code className="w-5 h-5 text-blue-400" />
+                      Tech Stack
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                      {brief.techStack.map((tech, index) => (
+                        <span 
+                          key={index}
+                          className="px-4 py-2 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-lg text-sm font-medium"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* What Not to Pitch */}
                 <div>
