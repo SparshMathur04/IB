@@ -22,13 +22,6 @@ export type Brief = {
   whatNotToPitch: string
   signalTag: string
   createdAt: string
-  // Enhanced fields
-  jobSignals?: JobSignal[]
-  techStackDetail?: TechStackItem[]
-  keyInsights?: string[]
-  confidenceNotes?: string
-  companyLogo?: string
-  companyDomain?: string
 }
 
 export type NewsItem = {
@@ -36,22 +29,6 @@ export type NewsItem = {
   description: string
   url: string
   publishedAt: string
-  source?: string
-  favicon?: string
-}
-
-export type JobSignal = {
-  title: string
-  company: string
-  location: string
-  type: string
-  posted: string
-}
-
-export type TechStackItem = {
-  name: string
-  confidence: 'detected' | 'inferred' | 'likely'
-  source: string
 }
 
 export type CreateBriefRequest = {
@@ -60,7 +37,7 @@ export type CreateBriefRequest = {
   userIntent: string
 }
 
-// Database operations with enhanced fields
+// Database operations with proper column names
 export const briefsService = {
   async getAll(): Promise<Brief[]> {
     const { data, error } = await supabase
@@ -85,13 +62,7 @@ export const briefsService = {
         pitchAngle: brief.pitchAngle,
         subjectLine: brief.subjectLine,
         whatNotToPitch: brief.whatNotToPitch,
-        signalTag: brief.signalTag,
-        jobSignals: brief.jobSignals || [],
-        techStackDetail: brief.techStackDetail || [],
-        keyInsights: brief.keyInsights || [],
-        confidenceNotes: brief.confidenceNotes || '',
-        companyLogo: brief.companyLogo || '',
-        companyDomain: brief.companyDomain || ''
+        signalTag: brief.signalTag
       })
       .select()
       .single()
