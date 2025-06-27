@@ -1,3 +1,5 @@
+import { createClient } from 'npm:@supabase/supabase-js@2'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -247,6 +249,3 @@ function inferTechStack(companyName: string, website?: string, jobSignals: strin
   
   return techStack.slice(0, 6) // Limit to 6 items
 }
-
-// Import Supabase client
-import { createClient } from 'npm:@supabase/supabase-js@2'
